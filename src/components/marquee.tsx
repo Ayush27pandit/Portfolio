@@ -11,6 +11,17 @@ interface MarqueeProps {
     className?: string;
 }
 
+const marqueeStyles = `
+@keyframes marquee-scroll {
+  0% { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(-50%, 0, 0); }
+}
+@keyframes marquee-scroll-reverse {
+  0% { transform: translate3d(-50%, 0, 0); }
+  100% { transform: translate3d(0, 0, 0); }
+}
+`;
+
 export const Marquee = ({
     children,
     direction = "left",
@@ -19,29 +30,32 @@ export const Marquee = ({
     className,
 }: MarqueeProps) => {
     return (
-        <div
-            className={cn(
-                "group flex overflow-hidden p-2 [--gap:1rem] [gap:var(--gap)] flex-row",
-                className
-            )}
-        >
+        <>
+            <style dangerouslySetInnerHTML={{ __html: marqueeStyles }} />
             <div
                 className={cn(
-                    "flex shrink-0 justify-around [gap:var(--gap)] flex-row marquee-scroll",
-                    direction === "right" && "marquee-reverse",
-                    pauseOnHover && "group-hover:[animation-play-state:paused]"
+                    "group flex overflow-hidden p-2 [--gap:1rem] [gap:var(--gap)] flex-row",
+                    className
                 )}
-                style={{
-                    width: "max-content",
-                    animationDuration: `${speed}s`,
-                }}
             >
-                {/* Render children twice for seamless loop */}
-                {React.Children.map(children, (child) => child)}
-                {React.Children.map(children, (child) => child)}
-                {React.Children.map(children, (child) => child)}
-                {React.Children.map(children, (child) => child)}
+                <div
+                    className="flex shrink-0 justify-around [gap:var(--gap)] flex-row"
+                    style={{
+                        width: "max-content",
+                        animation: `${direction === "left" ? "marquee-scroll" : "marquee-scroll-reverse"} ${speed}s linear infinite`,
+                        willChange: "transform",
+                        ...(pauseOnHover ? {} : {}),
+                    }}
+                    onMouseEnter={pauseOnHover ? (e) => { e.currentTarget.style.animationPlayState = "paused"; } : undefined}
+                    onMouseLeave={pauseOnHover ? (e) => { e.currentTarget.style.animationPlayState = "running"; } : undefined}
+                >
+                    {/* Render children twice for seamless loop */}
+                    {React.Children.map(children, (child) => child)}
+                    {React.Children.map(children, (child) => child)}
+                    {React.Children.map(children, (child) => child)}
+                    {React.Children.map(children, (child) => child)}
+                </div>
             </div>
-        </div>
+        </>
     );
 };
