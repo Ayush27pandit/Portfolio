@@ -141,33 +141,35 @@
 }
 
 /* GPU-accelerated marquee animation */
-@keyframes marquee-scroll {
-  0% {
-    transform: translate3d(0, 0, 0);
+@layer base {
+  @keyframes marquee-scroll {
+    0% {
+      transform: translate3d(0, 0, 0);
+    }
+
+    100% {
+      transform: translate3d(-50%, 0, 0);
+    }
   }
 
-  100% {
-    transform: translate3d(-50%, 0, 0);
+  @keyframes marquee-scroll-reverse {
+    0% {
+      transform: translate3d(-50%, 0, 0);
+    }
+
+    100% {
+      transform: translate3d(0, 0, 0);
+    }
   }
-}
 
-@keyframes marquee-scroll-reverse {
-  0% {
-    transform: translate3d(-50%, 0, 0);
+  .marquee-scroll {
+    animation: marquee-scroll linear infinite;
+    will-change: transform;
   }
 
-  100% {
-    transform: translate3d(0, 0, 0);
+  .marquee-reverse {
+    animation-name: marquee-scroll-reverse;
   }
-}
-
-.marquee-scroll {
-  animation: marquee-scroll linear infinite;
-  will-change: transform;
-}
-
-.marquee-reverse {
-  animation-name: marquee-scroll-reverse;
 }
 
 ::view-transition-old(root),
