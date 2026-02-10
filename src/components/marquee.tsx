@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 interface MarqueeProps {
@@ -19,15 +18,6 @@ export const Marquee = ({
     pauseOnHover = true,
     className,
 }: MarqueeProps) => {
-    const containerRef = React.useRef<HTMLDivElement>(null);
-    const [contentWidth, setContentWidth] = React.useState(0);
-
-    React.useEffect(() => {
-        if (containerRef.current) {
-            setContentWidth(containerRef.current.scrollWidth);
-        }
-    }, [children]);
-
     return (
         <div
             className={cn(
@@ -35,17 +25,15 @@ export const Marquee = ({
                 className
             )}
         >
-            <motion.div
-                className="flex shrink-0 justify-around [gap:var(--gap)] flex-row"
-                initial={{ x: direction === "left" ? 0 : "-50%" }}
-                animate={{ x: direction === "left" ? "-50%" : 0 }}
-                transition={{
-                    duration: speed,
-                    repeat: Infinity,
-                    ease: "linear",
-                }}
+            <div
+                className={cn(
+                    "flex shrink-0 justify-around [gap:var(--gap)] flex-row marquee-scroll",
+                    direction === "right" && "marquee-reverse",
+                    pauseOnHover && "group-hover:[animation-play-state:paused]"
+                )}
                 style={{
                     width: "max-content",
+                    animationDuration: `${speed}s`,
                 }}
             >
                 {/* Render children twice for seamless loop */}
@@ -53,7 +41,7 @@ export const Marquee = ({
                 {React.Children.map(children, (child) => child)}
                 {React.Children.map(children, (child) => child)}
                 {React.Children.map(children, (child) => child)}
-            </motion.div>
+            </div>
         </div>
     );
 };

@@ -102,10 +102,13 @@
     color: var(--foreground);
   }
 
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
     background-color: var(--background);
     background-image: var(--bg-gradient);
-    background-attachment: fixed;
     color: var(--foreground);
     min-height: 100vh;
     font-family: var(--font-sans);
@@ -115,6 +118,7 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     font-feature-settings: "ss01", "cv11", "liga", "tnum";
+    overflow-x: hidden;
   }
 }
 
@@ -134,6 +138,36 @@
 
 @utility tabular {
   font-variant-numeric: tabular-nums;
+}
+
+/* GPU-accelerated marquee animation */
+@keyframes marquee-scroll {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+@keyframes marquee-scroll-reverse {
+  0% {
+    transform: translate3d(-50%, 0, 0);
+  }
+
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.marquee-scroll {
+  animation: marquee-scroll linear infinite;
+  will-change: transform;
+}
+
+.marquee-reverse {
+  animation-name: marquee-scroll-reverse;
 }
 
 ::view-transition-old(root),

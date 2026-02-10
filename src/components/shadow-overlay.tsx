@@ -1,7 +1,6 @@
 'use client';
 
-import React, { useRef, useId, useEffect, CSSProperties } from 'react';
-import { animate, useMotionValue, AnimationPlaybackControls } from 'framer-motion';
+import React, { useRef, useId, useEffect, CSSProperties, memo } from 'react';
 
 // Type definitions
 interface ResponsiveImage {
@@ -55,7 +54,7 @@ const useInstanceId = (): string => {
     return instanceId;
 };
 
-export function ShadowOverlay({
+export const ShadowOverlay = memo(function ShadowOverlay({
     sizing = 'fill',
     color = 'rgba(128, 128, 128, 1)',
     animation,
@@ -66,40 +65,13 @@ export function ShadowOverlay({
 }: ShadowOverlayProps) {
     const id = useInstanceId();
     const animationEnabled = animation && animation.scale > 0;
-    const feColorMatrixRef = useRef<SVGFEColorMatrixElement>(null);
-    const hueRotateMotionValue = useMotionValue(180);
-    const hueRotateAnimation = useRef<AnimationPlaybackControls | null>(null);
+    const svgRef = useRef<SVGSVGElement>(null);
 
     const displacementScale = animation ? mapRange(animation.scale, 1, 100, 20, 100) : 0;
     const animationDuration = animation ? mapRange(animation.speed, 1, 100, 1000, 50) : 1;
 
-    useEffect(() => {
-        if (feColorMatrixRef.current && animationEnabled) {
-            if (hueRotateAnimation.current) {
-                hueRotateAnimation.current.stop();
-            }
-            hueRotateMotionValue.set(0);
-            hueRotateAnimation.current = animate(hueRotateMotionValue, 360, {
-                duration: animationDuration / 25,
-                repeat: Infinity,
-                repeatType: "loop",
-                repeatDelay: 0,
-                ease: "linear",
-                delay: 0,
-                onUpdate: (value: number) => {
-                    if (feColorMatrixRef.current) {
-                        feColorMatrixRef.current.setAttribute("values", String(value));
-                    }
-                }
-            });
-
-            return () => {
-                if (hueRotateAnimation.current) {
-                    hueRotateAnimation.current.stop();
-                }
-            };
-        }
-    }, [animationEnabled, animationDuration, hueRotateMotionValue]);
+    // Use CSS animation via SMIL instead of JS-driven setAttribute every frame
+    const smilDuration = `${animationDuration / 25}s`;
 
     return (
         <div
@@ -109,6 +81,7 @@ export function ShadowOverlay({
                 position: "relative",
                 width: "100%",
                 height: "100%",
+                contain: "strict",
                 ...style
             }}
         >
@@ -116,11 +89,13 @@ export function ShadowOverlay({
                 style={{
                     position: "absolute",
                     inset: -displacementScale,
-                    filter: animationEnabled ? `url(#${id}) blur(4px)` : "none"
+                    filter: animationEnabled ? `url(#${id}) blur(4px)` : "none",
+                    willChange: "filter",
+                    contain: "layout style paint",
                 }}
             >
                 {animationEnabled && (
-                    <svg style={{ position: "absolute" }}>
+                    <svg ref={svgRef} style={{ position: "absolute", width: 0, height: 0 }}>
                         <defs>
                             <filter id={id}>
                                 <feTurbulence
@@ -131,11 +106,19 @@ export function ShadowOverlay({
                                     type="turbulence"
                                 />
                                 <feColorMatrix
-                                    ref={feColorMatrixRef}
                                     in="undulation"
                                     type="hueRotate"
                                     values="180"
-                                />
+                                >
+                                    {/* Use SMIL animation instead of JS-driven setAttribute */}
+                                    <animate
+                                        attributeName="values"
+                                        from="0"
+                                        to="360"
+                                        dur={smilDuration}
+                                        repeatCount="indefinite"
+                                    />
+                                </feColorMatrix>
                                 <feColorMatrix
                                     in="dist"
                                     result="circulation"
@@ -196,10 +179,11 @@ export function ShadowOverlay({
                         backgroundImage: `url("https://framerusercontent.com/images/g0QcWrxr87K0ufOxIUFBakwYA8.png")`,
                         backgroundSize: noise.scale * 200,
                         backgroundRepeat: "repeat",
-                        opacity: noise.opacity / 2
+                        opacity: noise.opacity / 2,
+                        pointerEvents: "none",
                     }}
                 />
             )}
         </div>
     );
-}
+});

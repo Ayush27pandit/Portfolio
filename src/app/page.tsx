@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Image from "next/image";
 import {
   ExternalLink,
   Play,
@@ -22,7 +23,7 @@ import {
   AnimatedChevronDown,
   AnimatedZap
 } from "@/components/animated-icons";
-import Image from "next/image";
+
 import { GithubGraph } from "@/components/github-graph";
 import { Marquee } from "@/components/marquee";
 import { cn } from "@/lib/utils";
@@ -30,31 +31,36 @@ import { Magnetic } from "@/components/magnetic";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { ShadowOverlay } from "@/components/shadow-overlay";
 import { WordRotate } from "@/components/ui/word-rotate";
-import { useState, useEffect } from "react";
-import { ContactModal } from "@/components/contact-modal";
+import { useState, lazy, Suspense } from "react";
 import { projects } from "@/data/projects";
 
+// Lazy load the heavy contact modal
+const ContactModal = lazy(() =>
+  import("@/components/contact-modal").then((mod) => ({
+    default: mod.ContactModal,
+  }))
+);
 
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.15,
-      delayChildren: 0.2
+      staggerChildren: 0.1,
+      delayChildren: 0.1
     }
   }
 };
 
 const itemVariants = {
-  hidden: { y: 20, opacity: 0 },
+  hidden: { y: 15, opacity: 0 },
   visible: {
     y: 0,
     opacity: 1,
     transition: {
-      type: "spring",
-      stiffness: 100,
-      damping: 20
+      type: "tween",
+      duration: 0.4,
+      ease: "easeOut"
     } as const
   }
 };
@@ -72,10 +78,13 @@ function ExperienceItem({ exp }: { exp: { company: string, role: string, date: s
       <div className="flex justify-between items-center w-full relative z-10">
         <div className="flex items-center gap-4">
           <div className="w-10 h-10 rounded-xl bg-zinc-500/10 border border-foreground/10 dark:border-zinc-500/20 overflow-hidden relative">
-            <img
-              src={process.env.NEXT_PUBLIC_COMPANY_LOGO}
+            <Image
+              src={process.env.NEXT_PUBLIC_COMPANY_LOGO || ""}
               alt="Company Logo"
+              width={40}
+              height={40}
               className="w-full h-full object-cover"
+              loading="lazy"
             />
           </div>
           <div>
@@ -114,7 +123,7 @@ export default function Home() {
   return (
     <>
       <main className="min-h-screen bg-background text-foreground transition-colors duration-500 selection:bg-white/30 selection:text-white relative">
-        <div className="fixed inset-0 z-0 pointer-events-none opacity-100">
+        <div className="fixed inset-0 z-0 pointer-events-none opacity-100" style={{ contain: "strict" }}>
           <ShadowOverlay
             animation={{ scale: 100, speed: 8 }}
             noise={{ opacity: 0.35, scale: 0.35 }}
@@ -134,18 +143,27 @@ export default function Home() {
             <div className="h-40 md:h-48 w-full rounded-3xl overflow-hidden border border-border">
               <div className="w-full h-full bg-gradient-to-r from-blue-900/20 to-teal-900/20 flex items-center justify-center relative">
                 {/* Profile background from env */}
-                <div
-                  className="absolute inset-0 bg-cover bg-center"
-                  style={{ backgroundImage: `url('${process.env.NEXT_PUBLIC_COVER_PIC}')` }}
-                />
+                {process.env.NEXT_PUBLIC_COVER_PIC && (
+                  <Image
+                    src={process.env.NEXT_PUBLIC_COVER_PIC}
+                    alt="Cover"
+                    fill
+                    priority
+                    sizes="(max-width: 768px) 100vw, 672px"
+                    className="object-cover"
+                  />
+                )}
                 <div className="absolute inset-0 bg-black/10" />
               </div>
             </div>
             <div className="absolute -bottom-10 left-6">
               <div className="w-24 h-24 rounded-3xl border-2 border-zinc-200 dark:border-black overflow-hidden bg-card relative">
-                <img
-                  src={process.env.NEXT_PUBLIC_PROFILE_PIC_URL}
+                <Image
+                  src={process.env.NEXT_PUBLIC_PROFILE_PIC_URL || ""}
                   alt="Ayush Pandit"
+                  width={96}
+                  height={96}
+                  priority
                   className="w-full h-full object-cover"
                 />
               </div>
@@ -157,7 +175,7 @@ export default function Home() {
             variants={itemVariants}
             className="pt-10 space-y-4"
           >
-            <div className="px-8 py-6 bg-card/30 backdrop-blur-md rounded-3xl border border-foreground/20 dark:border-white/15 space-y-5 hover:border-foreground/20 dark:hover:border-white/30 transition-all duration-500 relative overflow-hidden group/section">
+            <div className="px-8 py-6 bg-card/30 rounded-3xl border border-foreground/20 dark:border-white/15 space-y-5 hover:border-foreground/20 dark:hover:border-white/30 transition-all duration-500 relative overflow-hidden group/section">
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_0%_0%,rgba(99,102,241,0.08)_0%,transparent_50%),radial-gradient(circle_at_100%_0%,rgba(236,72,153,0.08)_0%,transparent_50%),radial-gradient(circle_at_0%_100%,rgba(59,130,246,0.08)_0%,transparent_50%),radial-gradient(circle_at_100%_100%,rgba(168,85,247,0.08)_0%,transparent_50%)] opacity-0 group-hover/section:opacity-100 pointer-events-none transition-opacity duration-500" />
               <div className="space-y-2">
                 <div className="flex justify-between items-start">
@@ -239,7 +257,7 @@ export default function Home() {
           <motion.section
             variants={itemVariants}
             whileHover="hover"
-            className="p-6 bg-card/30 backdrop-blur-md rounded-3xl border border-foreground/20 dark:border-white/15 hover:border-foreground/30 dark:hover:border-white/30 transition-all duration-500 relative overflow-hidden group/section"
+            className="p-6 bg-card/30 rounded-3xl border border-foreground/20 dark:border-white/15 hover:border-foreground/30 dark:hover:border-white/30 transition-all duration-500 relative overflow-hidden group/section"
           >
             <motion.div
               variants={{ hover: { opacity: 1 } }}
@@ -261,10 +279,13 @@ export default function Home() {
                 >
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center border border-accent/20 overflow-hidden relative">
-                      <img
-                        src={process.env.NEXT_PUBLIC_COLLEGE_LOGO_URL}
+                      <Image
+                        src={process.env.NEXT_PUBLIC_COLLEGE_LOGO_URL || ""}
                         alt="College Logo"
+                        width={40}
+                        height={40}
                         className="w-full h-full object-cover"
+                        loading="lazy"
                       />
                     </div>
                     <div>
@@ -289,7 +310,7 @@ export default function Home() {
           <motion.section
             variants={itemVariants}
             whileHover="hover"
-            className="p-6 bg-card/20 backdrop-blur-md rounded-3xl border border-foreground/10 dark:border-white/5 opacity-80 hover:opacity-100  transition-all duration-500 px-0 relative group/section"
+            className="p-6 bg-card/20 rounded-3xl border border-foreground/10 dark:border-white/5 opacity-80 hover:opacity-100  transition-all duration-500 px-0 relative group/section"
           >
             <motion.div
               variants={{ hover: { opacity: 1 } }}
@@ -322,7 +343,7 @@ export default function Home() {
           <motion.section
             variants={itemVariants}
             whileHover="hover"
-            className="p-6 bg-card/30 backdrop-blur-md rounded-3xl border border-foreground/20 dark:border-white/15 hover:border-foreground/30 dark:hover:border-white/30 transition-all duration-500 relative overflow-hidden group/section"
+            className="p-6 bg-card/30 rounded-3xl border border-foreground/20 dark:border-white/15 hover:border-foreground/30 dark:hover:border-white/30 transition-all duration-500 relative overflow-hidden group/section"
           >
             <motion.div
               variants={{ hover: { opacity: 1 } }}
@@ -352,17 +373,13 @@ export default function Home() {
                 <ExperienceItem key={i} exp={exp} />
               ))}
             </div>
-            {/* <button className="w-full mt-6 py-3 border border-border/50 text-xs font-bold text-muted-foreground hover:text-foreground hover:border-foreground transition flex items-center justify-center gap-2 group">
-              View full experience
-              <AnimatedExternalLink size={12} className="opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-            </button> */}
           </motion.section>
 
           {/* Projects Section */}
           <motion.section
             variants={itemVariants}
             whileHover="hover"
-            className="p-6 bg-card/30 backdrop-blur-md rounded-3xl border border-foreground/20 dark:border-white/15 hover:border-foreground/30 dark:hover:border-white/30 transition-all duration-500 relative overflow-hidden group/section"
+            className="p-6 bg-card/30 rounded-3xl border border-foreground/20 dark:border-white/15 hover:border-foreground/30 dark:hover:border-white/30 transition-all duration-500 relative overflow-hidden group/section"
           >
             <motion.div
               variants={{ hover: { opacity: 1 } }}
@@ -388,7 +405,7 @@ export default function Home() {
                     className="relative aspect-[16/10] bg-muted/20 flex flex-col items-center justify-center overflow-hidden cursor-pointer group/img"
                   >
                     <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle,var(--foreground)_1px,transparent_1px)] [background-size:20px_20px]" />
-                    <div className="absolute top-4 right-4 bg-background/80 backdrop-blur-md px-3 py-1.5 rounded-full flex items-center gap-2 border border-border z-10">
+                    <div className="absolute top-4 right-4 bg-background/80 px-3 py-1.5 rounded-full flex items-center gap-2 border border-border z-10">
                       <Globe size={12} className="text-foreground" />
                       <span className="text-[10px] font-bold tracking-tight text-foreground">Website</span>
                     </div>
@@ -453,7 +470,7 @@ export default function Home() {
           <motion.section
             variants={itemVariants}
             whileHover="hover"
-            className="p-6 bg-card/20 backdrop-blur-md rounded-3xl border border-foreground/10 dark:border-white/5 opacity-80 hover:opacity-100 transition-all duration-500 relative group/section overflow-hidden"
+            className="p-6 bg-card/20 rounded-3xl border border-foreground/10 dark:border-white/5 opacity-80 hover:opacity-100 transition-all duration-500 relative group/section overflow-hidden"
           >
             <motion.div
               variants={{ hover: { opacity: 1 } }}
@@ -472,7 +489,7 @@ export default function Home() {
           <motion.section
             variants={itemVariants}
             whileHover="hover"
-            className="p-6 bg-card/30 backdrop-blur-md rounded-3xl border border-foreground/20 dark:border-white/15 hover:border-foreground/30 dark:hover:border-white/30 transition-all duration-500 relative overflow-hidden group/section"
+            className="p-6 bg-card/30 rounded-3xl border border-foreground/20 dark:border-white/15 hover:border-foreground/30 dark:hover:border-white/30 transition-all duration-500 relative overflow-hidden group/section"
           >
             <motion.div
               variants={{ hover: { opacity: 1 } }}
@@ -516,7 +533,7 @@ export default function Home() {
             variants={itemVariants}
             whileHover="hover"
             whileTap={{ scale: 0.99 }}
-            className="p-6 bg-card/20 backdrop-blur-md rounded-3xl border border-foreground/10 dark:border-white/5 opacity-80 hover:opacity-100 transition-all duration-500 cursor-pointer relative overflow-hidden group/section"
+            className="p-6 bg-card/20 rounded-3xl border border-foreground/10 dark:border-white/5 opacity-80 hover:opacity-100 transition-all duration-500 cursor-pointer relative overflow-hidden group/section"
           >
             <motion.div
               variants={{ hover: { opacity: 1 } }}
@@ -557,7 +574,11 @@ export default function Home() {
         </motion.div>
 
       </main>
-      <ContactModal isOpen={isContactOpen} onClose={() => setIsContactOpen(false)} />
+      {isContactOpen && (
+        <Suspense fallback={null}>
+          <ContactModal isOpen={isContactOpen} onClose={() => setIsContactOpen(false)} />
+        </Suspense>
+      )}
     </>
   );
 }
